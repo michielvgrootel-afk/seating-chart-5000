@@ -526,6 +526,104 @@ function reducer(state, action) {
         ),
       };
 
+    // ── Import from CSV (multiple classes with students + relationships) ──
+    case 'IMPORT_CSV': {
+      // action.classes: [{ name, students: string[], relationships: [{ studentA, studentB, type }] }]
+      // action.mode: 'merge' | 'overwrite' — per-class: merge adds to existing, overwrite replaces
+      const mode = action.mode ?? 'merge';
+      let updatedClasses = [...state.classes];
+      let lastNewId = state.activeClassId;
+
+      for (const incoming of action.classes) {
+        const existingIdx = updatedClasses.findIndex(
+          c => c.name.toLowerCase() === incoming.name.toLowerCase()
+        );
+
+        if (existingIdx >= 0 && mode === 'merge') {
+          // Merge into existing class: add new students, skip duplicates
+          const existing = updatedClasses[existingIdx];
+          const existingNames = new Set(existing.students.map(s => s.name.toLowerCase()));
+          const newStudents = incoming.students
+            .filter(name => !existingNames.has(name.toLowerCase()))
+            .map(name => ({ id: uuidv4(), name }));
+          const allStudents = [...existing.students, ...newStudents];
+
+          // Build name → id lookup for relationships
+          const nameToId = {};
+          for (const s of allStudents) {
+            nameToId[s.name.toLowerCase()] = s.id;
+          }
+
+          // Add relationships, skip duplicates
+          const existingRels = existing.relationships ?? [];
+          const relSet = new Set(
+            existingRels.map(r => [r.studentA, r.studentB].sort().join('|||') + '::' + r.type)
+          );
+          const newRels = [];
+          for (const rel of incoming.relationships) {
+            const idA = nameToId[rel.studentA.toLowerCase()];
+            const idB = nameToId[rel.studentB.toLowerCase()];
+            if (!idA || !idB) continue;
+            const key = [idA, idB].sort().join('|||') + '::' + rel.type;
+            if (relSet.has(key)) continue;
+            relSet.add(key);
+            newRels.push({ id: uuidv4(), studentA: idA, studentB: idB, type: rel.type });
+          }
+
+          updatedClasses[existingIdx] = {
+            ...existing,
+            students: allStudents,
+            relationships: [...existingRels, ...newRels],
+          };
+          lastNewId = existing.id;
+        } else {
+          // Create new class (or overwrite)
+          const classId = existingIdx >= 0 ? updatedClasses[existingIdx].id : uuidv4();
+          const students = incoming.students.map(name => ({ id: uuidv4(), name }));
+
+          // Build name → id lookup
+          const nameToId = {};
+          for (const s of students) {
+            nameToId[s.name.toLowerCase()] = s.id;
+          }
+
+          const relationships = [];
+          const relSet = new Set();
+          for (const rel of incoming.relationships) {
+            const idA = nameToId[rel.studentA.toLowerCase()];
+            const idB = nameToId[rel.studentB.toLowerCase()];
+            if (!idA || !idB) continue;
+            const key = [idA, idB].sort().join('|||') + '::' + rel.type;
+            if (relSet.has(key)) continue;
+            relSet.add(key);
+            relationships.push({ id: uuidv4(), studentA: idA, studentB: idB, type: rel.type });
+          }
+
+          const newClass = {
+            id: classId,
+            name: incoming.name,
+            students,
+            assignments: {},
+            layout: { desks: [], roomElements: [] },
+            relationships,
+          };
+
+          if (existingIdx >= 0) {
+            updatedClasses[existingIdx] = newClass;
+          } else {
+            updatedClasses.push(newClass);
+          }
+          lastNewId = classId;
+        }
+      }
+
+      return {
+        ...state,
+        classes: updatedClasses,
+        activeClassId: lastNewId,
+      };
+    }
+
     // ── Import a single class ──
     case 'IMPORT_CLASS': {
       const incoming = {

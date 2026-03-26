@@ -1,9 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useApp, useActiveClass, useActiveLayout } from '../context/AppContext';
 import { saveClassToJson, loadClassFromJson } from '../utils/fileIO';
 import { exportAsPng } from '../utils/exportImage';
+import HelpModal from './HelpModal';
+import CSVImportModal from './CSVImportModal';
 
 export default function Toolbar({ canvasRef }) {
+  const [showHelp, setShowHelp] = useState(false);
+  const [showCSV, setShowCSV] = useState(false);
   const { state, dispatch } = useApp();
   const activeClass = useActiveClass();
   const layout = useActiveLayout();
@@ -86,6 +90,9 @@ export default function Toolbar({ canvasRef }) {
       </div>
 
       <div className="toolbar__right">
+        <button className="btn btn--ghost" onClick={() => setShowCSV(true)} title="Import classes from a CSV spreadsheet">
+          📄 CSV Import
+        </button>
         <button className="btn btn--ghost" onClick={handleImport} title="Load a class from a saved file">
           📂 Load Class
         </button>
@@ -100,7 +107,17 @@ export default function Toolbar({ canvasRef }) {
         >
           📷 Export PNG
         </button>
+        <button
+          className="btn btn--ghost btn--help"
+          onClick={() => setShowHelp(true)}
+          title="Help & instructions"
+        >
+          ❓ Help
+        </button>
       </div>
+
+      {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
+      {showCSV && <CSVImportModal onClose={() => setShowCSV(false)} />}
     </header>
   );
 }
