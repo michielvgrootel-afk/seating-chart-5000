@@ -55,8 +55,8 @@ export default function Toolbar({ canvasRef }) {
     <header className="toolbar">
       <div className="toolbar__left">
         <div className="toolbar__logo">
-          <span className="toolbar__logo-icon">🪑</span>
-          <span className="toolbar__logo-text">Seating Chart 5000</span>
+          <span className="toolbar__logo-icon"><img src={`${import.meta.env.BASE_URL}logo-isa.svg`} alt="ISAlmere" /></span>
+          <span className="toolbar__logo-text">ISAlmere Seating Charts</span>
         </div>
 
         {/* Mode toggle */}

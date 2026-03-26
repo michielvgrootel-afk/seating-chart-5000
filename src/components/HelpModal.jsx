@@ -6,7 +6,7 @@ const SECTIONS = [
     title: 'Getting Started',
     content: (
       <>
-        <p>Welcome to <strong>Seating Chart 5000</strong>! Here's how to set up your first seating chart in a few minutes:</p>
+        <p>Welcome to <strong>ISAlmere Seating Charts</strong>! Here's how to set up your first seating chart in a few minutes:</p>
         <ol>
           <li><strong>Create a class</strong> — click the <code>+</code> button next to "Classes" in the left panel. Rename it by clicking ✏️.</li>
           <li><strong>Set up your room</strong> — switch to <strong>Edit Layout</strong> mode (top bar), then click <strong>📐 Templates</strong> to choose a desk arrangement. Pick rows &amp; columns, or clusters.</li>
