@@ -1,9 +1,42 @@
 /**
+ * Show a native "Save As" dialog if the browser supports it,
+ * otherwise fall back to a standard download link.
+ */
+async function saveWithPicker(blob, suggestedName) {
+  if (window.showSaveFilePicker) {
+    try {
+      const handle = await window.showSaveFilePicker({
+        suggestedName,
+        types: [{
+          description: 'JSON file',
+          accept: { 'application/json': ['.json'] },
+        }],
+      });
+      const writable = await handle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+      return;
+    } catch (err) {
+      // User cancelled the dialog — don't fall through to download
+      if (err.name === 'AbortError') return;
+      // Other error — fall through to legacy approach
+    }
+  }
+  // Fallback: programmatic download
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = suggestedName;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+/**
  * Serialise app state to a JSON file and trigger a download.
  * Layout is now stored inside each class object (version 2+).
  * No data is sent anywhere — this is a pure client-side download.
  */
-export function saveToJson(state, markClean) {
+export async function saveToJson(state, markClean) {
   const payload = {
     version: 2,
     savedAt: new Date().toISOString(),
@@ -13,12 +46,7 @@ export function saveToJson(state, markClean) {
   };
 
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = 'seating-chart.json';
-  link.click();
-  URL.revokeObjectURL(url);
+  await saveWithPicker(blob, 'seating-chart.json');
 
   if (markClean) markClean();
 }
@@ -28,7 +56,7 @@ export function saveToJson(state, markClean) {
  * The file can later be imported into any seating chart session.
  * No data is sent anywhere — pure client-side download.
  */
-export function saveClassToJson(classObj) {
+export async function saveClassToJson(classObj) {
   const payload = {
     version: 2,
     type: 'seating-chart-class',
@@ -37,12 +65,7 @@ export function saveClassToJson(classObj) {
   };
   const safeName = classObj.name.replace(/[^a-z0-9]/gi, '-').toLowerCase();
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `${safeName}.class.json`;
-  link.click();
-  URL.revokeObjectURL(url);
+  await saveWithPicker(blob, `${safeName}.class.json`);
 }
 
 /**
