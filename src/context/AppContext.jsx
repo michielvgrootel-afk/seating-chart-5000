@@ -26,6 +26,7 @@ const FRESH_STATE = {
     darkMode: false,
     snapToGrid: true,
     gridSize: 20,
+    showHighlights: true, // relationship colours on desks (hide when showing students)
   },
   ui: {
     mode: 'assign',           // 'layout' | 'assign'
@@ -776,9 +777,12 @@ export function useAssignedStudentId(deskId) {
 const ADJACENT_DISTANCE = 160; // two desks are "adjacent" if their centers are within this
 
 export function useRelationshipHighlights() {
+  const { state } = useApp();
   const activeClass = useActiveClass();
   const layout = useActiveLayout();
   if (!activeClass) return {};
+  // Older saved settings lack this key, so treat anything but false as on
+  if (state.settings.showHighlights === false) return {};
 
   const { assignments, relationships = [] } = activeClass;
   const { desks } = layout;

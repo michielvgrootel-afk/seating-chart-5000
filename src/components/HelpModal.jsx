@@ -79,6 +79,7 @@ const SECTIONS = [
           </li>
         </ul>
         <p>The highlights help you see problems at a glance when using <strong>Randomize</strong> or rearranging students manually.</p>
+        <p>Showing the chart to students? Click <strong>Colours: On</strong> in the toolbar to hide the highlights. This also applies to <strong>Export PNG</strong>, so you can export a clean version for students and a highlighted version for staff.</p>
       </>
     ),
   },

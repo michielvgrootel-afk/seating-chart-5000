@@ -12,6 +12,7 @@ export default function Toolbar({ canvasRef }) {
   const activeClass = useActiveClass();
   const layout = useActiveLayout();
   const isLayoutMode = state.ui.mode === 'layout';
+  const showHighlights = state.settings.showHighlights !== false;
 
   /** Save the active class to a .class.json file */
   function handleSave() {
@@ -90,6 +91,15 @@ export default function Toolbar({ canvasRef }) {
       </div>
 
       <div className="toolbar__right">
+        <button
+          className="btn btn--ghost"
+          onClick={() => dispatch({ type: 'UPDATE_SETTINGS', settings: { showHighlights: !showHighlights } })}
+          title={showHighlights
+            ? 'Hide relationship colours (e.g. before showing the chart to students)'
+            : 'Show relationship colours (red / green / orange desks)'}
+        >
+          {showHighlights ? '🎨 Colours: On' : '⚪ Colours: Off'}
+        </button>
         <button className="btn btn--ghost" onClick={() => setShowCSV(true)} title="Import classes from a CSV spreadsheet">
           📄 CSV Import
         </button>
